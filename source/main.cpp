@@ -53,14 +53,6 @@ bool createScene() {
 		return false;
 	}
 
-    // if (!diffuseMap.Create("assets/diffuseMap.png")) {
-	// 	return false;
-	// }
-
-	// if (!specularMap.Create("assets/specularMap.png")) {
-	// 	return false;
-	// }
-
 	return true;
 }
 
@@ -70,24 +62,18 @@ void renderScene() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	shaderProgram.Bind();
-	// shaderProgram.SetUniform1i("diffuseMap", 0);
-	// shaderProgram.SetUniform1i("specularMap", 1);
-	shaderProgram.SetUniform1i("envMap", 2);
+	shaderProgram.SetUniform1i("envMap", 0);
 	shaderProgram.SetUniform2i("screenSize", SCR_WIDTH, SCR_HEIGHT);
 
 	vertexArrayObject.Bind();
 
-	// diffuseMap.Bind(0);
-	// specularMap.Bind(1);
-	envMap.Bind(2);
+	envMap.Bind(0);
 
 	vertexArrayObject.Draw(GL_TRIANGLES, 6);
 }
 
 
 void destroyScene() {
-	// diffuseMap.Destroy();
-	// specularMap.Destroy();
 	vertexArrayObject.Destroy();
 	shaderProgram.Destroy();
 }
@@ -100,8 +86,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "RayTracing", NULL, NULL);
-	if (window == NULL)
-	{
+	if (window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
