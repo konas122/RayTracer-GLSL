@@ -13,8 +13,8 @@ Texture2D envMap;
 ShaderProgram shaderProgram;
 VertexArrayObject vertexArrayObject;
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 900;
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
