@@ -7,8 +7,6 @@
 #include "texture.h"
 
 
-// Texture2D diffuseMap;
-// Texture2D specularMap;
 Texture2D envMap;
 ShaderProgram shaderProgram;
 VertexArrayObject vertexArrayObject;
