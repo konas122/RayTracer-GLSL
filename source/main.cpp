@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <glad/glad.h>
@@ -21,8 +22,8 @@ float lastFrame = 0.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 
 int samples = 0;
-const unsigned int SCR_WIDTH = 1200;
-const unsigned int SCR_HEIGHT = 900;
+const unsigned int SCR_WIDTH = 1800;
+const unsigned int SCR_HEIGHT = 1350;
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -72,6 +73,15 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
         samples = 0;
     }
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        camera.ProcessKeyboard(UP, deltaTime);
+        samples = 0;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        camera.ProcessKeyboard(DOWN, deltaTime);
+        samples = 0;
+    }
 }
 
 
@@ -113,7 +123,11 @@ bool createScene() {
 }
 
 
-void renderScene() {
+void renderScene(unsigned int FBO) {
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     auto randFloat = []() {
         return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     };
@@ -121,7 +135,6 @@ void renderScene() {
     float randHeight = static_cast<float>(randFloat() / SCR_HEIGHT);
 
     shaderProgram.Bind();
-	shaderProgram.SetUniform1i("envMap", 0);
 	shaderProgram.SetUniform2f("randSize", randWidth, randHeight);
     shaderProgram.SetUniform3f("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
 
@@ -179,6 +192,10 @@ bool initFinalProgram(unsigned int *FBO, unsigned int *TextureID, unsigned int *
 
 
 void finalRender(unsigned int TextureID, unsigned int PrevScene) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     finalProgram.Bind();
     finalProgram.SetUniform1i("sampleCount", std::max(1, ++samples));
 
@@ -257,15 +274,7 @@ int main() {
 
 		processInput(window);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-        glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        renderScene();
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        renderScene(FBO);
 
         finalRender(TextureID, PrevScene);
 
