@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -5,14 +6,38 @@
 #include "vao.h"
 #include "shader.h"
 #include "texture.h"
+#include "camera.hpp"
 
 
-Texture2D envMap;
-ShaderProgram shaderProgram;
-VertexArrayObject vertexArrayObject;
+Texture2D           envMap;
+ShaderProgram       shaderProgram;
+VertexArrayObject   vertexArrayObject;
 
+ShaderProgram       finalProgram;
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+
+int samples = 0;
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
+
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+float vertices[] = {
+    1.0f,  1.0f, 0.0f,  // top right
+    1.0f, -1.0f, 0.0f,  // bottom right
+    -1.0f, -1.0f, 0.0f, // bottom left
+    -1.0f,  1.0f, 0.0f  // top left 
+};
+
+unsigned int indices[] = {
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+};
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -24,22 +49,43 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    
+    samples = 0;
+}
+
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse) {
+        samples = 0;
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 
 bool createScene() {
-	float vertices[] = {
-		 1.0f,  1.0f, 0.0f,  // top right
-		 1.0f, -1.0f, 0.0f,  // bottom right
-		-1.0f, -1.0f, 0.0f,  // bottom left
-		-1.0f,  1.0f, 0.0f   // top left 
-	};
-	unsigned int indices[] = {  // note that we start from 0!
-		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
-	};
-
-	if (!vertexArrayObject.Create(vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]))) {
+	if (!vertexArrayObject.Create(vertices, sizeof(vertices), indices, sizeof(indices))) {
 		return false;
 	}
 	
@@ -56,28 +102,92 @@ bool createScene() {
 
 
 void renderScene() {
-	glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+    auto randFloat = []() {
+        return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    };
+    float randWidth = static_cast<float>(randFloat() / SCR_WIDTH);
+    float randHeight = static_cast<float>(randFloat() / SCR_HEIGHT);
 
-	shaderProgram.Bind();
+    shaderProgram.Bind();
 	shaderProgram.SetUniform1i("envMap", 0);
-	shaderProgram.SetUniform2i("screenSize", SCR_WIDTH, SCR_HEIGHT);
+	shaderProgram.SetUniform2f("randSize", randWidth, randHeight);
+    shaderProgram.SetUniform3f("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
 
-	vertexArrayObject.Bind();
+    vertexArrayObject.Bind();
 
 	envMap.Bind(0);
 
 	vertexArrayObject.Draw(GL_TRIANGLES, 6);
+    vertexArrayObject.Unbind();
 }
 
 
 void destroyScene() {
 	vertexArrayObject.Destroy();
 	shaderProgram.Destroy();
+    finalProgram.Destroy();
+}
+
+
+bool initFinalProgram(unsigned int *FBO, unsigned int *TextureID, unsigned int *PrevScene) {
+    glGenFramebuffers(1, FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, *FBO);
+
+    glGenTextures(1, TextureID);
+    glBindTexture(GL_TEXTURE_2D, *TextureID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *TextureID, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "ERROR::POSTPROCESSOR: Failed to initialize FBO" << std::endl;
+        return false;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenTextures(1, PrevScene);
+    glBindTexture(GL_TEXTURE_2D, *PrevScene);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (!finalProgram.Create("shaders/PathTraceVS.glsl", "shaders/finalPS.glsl")) {
+		return false;
+	}
+
+    return true;
+}
+
+
+void finalRender(unsigned int TextureID, unsigned int PrevScene) {
+    finalProgram.Bind();
+    finalProgram.SetUniform1i("sampleCount", std::max(1, ++samples));
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, TextureID);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, PrevScene);
+
+    vertexArrayObject.Bind();
+    vertexArrayObject.Draw(GL_TRIANGLES, 6);
+    vertexArrayObject.Unbind();
+
+    glBindTexture(GL_TEXTURE_2D, PrevScene);
+    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, SCR_WIDTH, SCR_HEIGHT);
 }
 
 
 int main() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -91,6 +201,8 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -102,12 +214,32 @@ int main() {
 		return -1;
 	}
 
-	while (!glfwWindowShouldClose(window)) {
+    unsigned int FBO, TextureID, PrevScene;
+    if (!initFinalProgram(&FBO, &TextureID, &PrevScene)) {
+		std::cout << "Failed to initialize FrameBuffer" << std::endl;
+		return -1;
+    }
+
+    while (!glfwWindowShouldClose(window)) {
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
 		processInput(window);
 
-		renderScene();
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+        glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-		glfwSwapBuffers(window);
+        renderScene();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        finalRender(TextureID, PrevScene);
+
+        glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 

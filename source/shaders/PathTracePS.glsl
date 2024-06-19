@@ -9,10 +9,10 @@
 
 in vec2 screenCoord;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D specularMap;
 uniform sampler2D envMap;
-uniform vec2 screenSize;
+uniform vec2 randSize;
+
+uniform vec3 viewPos;
 
 out vec4 FragColor;
 
@@ -175,7 +175,7 @@ bool SphereHit(Sphere sphere, Ray ray, float t_min, float t_max, inout HitRecord
 	float discriminant = b * b - 4 * a * c;
     
     if (discriminant > 0.0) {
-		float temp = (-b - sqrt(discriminant)) / (a);
+		float temp = (-b - sqrt(discriminant)) / a;
         if (temp < t_max && temp > t_min) {
             hitRecord.t = temp;
             hitRecord.position = RayAt(ray, temp);
@@ -183,7 +183,7 @@ bool SphereHit(Sphere sphere, Ray ray, float t_min, float t_max, inout HitRecord
             return true;
         }
 
-        temp = (-b + sqrt(discriminant)) / (a);
+        temp = (-b + sqrt(discriminant)) / a;
         if (temp < t_max && temp > t_min) {
             hitRecord.t = temp;
             hitRecord.position = RayAt(ray, temp);
@@ -214,6 +214,8 @@ bool LambertianScatter(in Lambertian lambertian, in Ray incident, in HitRecord h
 	return true;
 }
 
+
+// ================================================
 
 struct Metallic {
 	vec3 albedo;
@@ -264,6 +266,7 @@ bool MetallicScatter(in Metallic metallic, in Ray incident, in HitRecord hitReco
 	return dot(scattered.direction, hitRecord.normal) > 0.0;
 }
 
+// ================================================
 
 struct Dielectric {
 	vec3 albedo;
@@ -312,7 +315,7 @@ bool DielectricScatter(in Dielectric dielectric, in Ray incident, in HitRecord h
 		scattered = Ray(hitRecord.position, refracted);
 	}
 	else {
-		scattered = Ray(hitRecord.position, refracted);
+		scattered = Ray(hitRecord.position, reflected);
 	}
 	return true;
 }
@@ -329,19 +332,24 @@ Dielectric dielectric[4];
 
 void InitScene() {
 	world = WorldConstructor();
-	camera = CameraConstructor(vec3(-2.0, -1.0, -1.0), vec3(4.0, 0.0, 0.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 0.0, 0.0));
+	camera = CameraConstructor(
+        vec3(-2.0, -1.5, -1.0),
+        vec3(4.0, 0.0, 0.0),
+        vec3(0.0, 3.0, 0.0),
+        viewPos
+    );
 
 	lambert[0] = LambertianConstructor(vec3(0.7, 0.5, 0.5));
 	lambert[1] = LambertianConstructor(vec3(0.5, 0.7, 0.5));
 	lambert[2] = LambertianConstructor(vec3(0.5, 0.5, 0.7));
 
-	// metallic[0] = MetallicConstructor(vec3(0.7, 0.5, 0.5), 0.0);
-	// metallic[1] = MetallicConstructor(vec3(0.5, 0.7, 0.5), 0.1);
-	// metallic[2] = MetallicConstructor(vec3(0.5, 0.5, 0.7), 0.2);
+	metallic[0] = MetallicConstructor(vec3(0.7, 0.5, 0.5), 0.0);
+	metallic[1] = MetallicConstructor(vec3(0.5, 0.7, 0.5), 0.1);
+	metallic[2] = MetallicConstructor(vec3(0.5, 0.5, 0.7), 0.2);
 
-	// dielectric[0] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.0, 1.5);
-	// dielectric[1] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.1, 1.5);
-	// dielectric[2] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.2, 1.5);
+	dielectric[0] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.0, 1.5);
+	dielectric[1] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.1, 1.5);
+	dielectric[2] = DielectricConstructor(vec3(1.0, 1.0, 1.0), 0.2, 1.5);
 }
 
 
@@ -363,7 +371,12 @@ vec3 GetEnvironmentColor(Ray ray) {
     vec3 dir = normalize(ray.direction);
 	float theta = acos(dir.y) / PI;
 	float phi = (atan(dir.x, dir.z) / (PI) + 1.0) / 2.0;
-	return texture(envMap, vec2(phi, theta)).xyz;
+
+    const float gamma = 2.2;
+	vec3 hdrColor = texture(envMap, vec2(phi, theta)).xyz;
+    // Reinhard
+    vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
+    return mapped;
 }
 
 
@@ -424,21 +437,13 @@ vec3 InverseGammaCorrection(vec3 c) {
 
 void main() {
     InitScene();
-    Camera camera = CameraConstructor(
-                        vec3(-2.0, -1.5, -1.0),
-                        vec3(4.0, 0.0, 0.0),
-                        vec3(0.0, 3.0, 0.0),
-                        vec3(0.0, 0.0, 0.0));
 
-    int sampleCount = 1000;
 	vec3 col = vec3(0.0, 0.0, 0.0);
-    for (int i = 0; i < sampleCount; i++) {
-		// Ray ray = CameraGetRay(camera, screenCoord + (rand2() / screenSize));
-        Ray ray = CameraGetRay(camera, screenCoord);
-        col += WorldTrace(world, ray, 20);
-    }
-    col /= sampleCount;
-    // col = GammaCorrection(col);
+
+    Ray ray = CameraGetRay(camera, screenCoord + randSize);
+    // Ray ray = CameraGetRay(camera, screenCoord);
+    col += WorldTrace(world, ray, 20);
+
     FragColor.xyz = col;
     FragColor.w = 1.0;
 }
