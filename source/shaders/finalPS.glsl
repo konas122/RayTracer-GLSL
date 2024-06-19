@@ -23,7 +23,7 @@ void main() {
     vec3 color = texture(scene, screenCoord).xyz;
 
     vec3 prevColor = texture(prevScene, screenCoord).xyz;
-    prevColor = InverseGammaCorrection(prevColor);
+    // prevColor = InverseGammaCorrection(prevColor);
     prevColor *= (sampleCount - 1);
 
     color += prevColor;
