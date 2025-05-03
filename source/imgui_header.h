@@ -1,5 +1,5 @@
-#ifndef __HEADER_H__
-#define __HEADER_H__
+#ifndef __IMGUI_HEADER_H__
+#define __IMGUI_HEADER_H__
 
 
 #include "imconfig.h"

@@ -11,28 +11,6 @@ VertexArrayObject::~VertexArrayObject() {
 }
 
 
-bool VertexArrayObject::Create(float *vertices, int verticesSize) {
-    glGenVertexArrays(1, &this->VAO);
-    glGenBuffers(1, &this->VBO);
-
-    if (this->VAO == 0 || this->VBO == 0) {
-        return false;
-    }
-    glBindVertexArray(this->VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-    glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    return true;
-}
-
-
 bool VertexArrayObject::Create(float *vertices, int verticesSize, unsigned int *indices, int indicesSize) {
     glGenVertexArrays(1, &this->VAO);
     glGenBuffers(1, &this->VBO);

@@ -5,10 +5,10 @@
 #include <GLFW/glfw3.h>
 
 #include "vao.h"
-#include "header.h"
 #include "shader.h"
 #include "texture.h"
 #include "camera.hpp"
+#include "imgui_header.h"
 
 
 Texture2D           envMap;
@@ -262,6 +262,8 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    glm::vec3 ball_color = glm::vec3(0.45f, 0.55f, 0.60f);
+
     while (!glfwWindowShouldClose(window)) {
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -282,6 +284,7 @@ int main() {
             ImGui::Begin("Tool Bar");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::Text("Samples: %d", samples);
+            ImGui::ColorEdit3("ball color", (float*)&ball_color);
             ImGui::End();
         }
 

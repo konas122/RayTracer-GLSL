@@ -10,7 +10,6 @@ public:
     VertexArrayObject();
     virtual ~VertexArrayObject();
 
-    bool Create(float *vertices, int verticesSize);
     bool Create(float *vertices, int verticesCount, unsigned int *indices, int indicesCount);
     void Destroy();
 
