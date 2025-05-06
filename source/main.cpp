@@ -18,7 +18,7 @@ int main() {
     Film film { 192 * 4, 108 * 4 };
     Camera camera{film, {-3.6, 0, 0}, {0, 0, 0}, 45};
 
-    Model model("assets/simple_dragon.obj");
+    Model model("assets/dragon_871k.obj");
     Sphere sphere{
         {0, 0, 0},
         1
