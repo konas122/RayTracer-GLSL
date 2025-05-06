@@ -1,0 +1,16 @@
+.vs/
+.idea/
+.vscode/
+
+out/
+build/
+
+*.a
+*.so
+*.pdb
+*.dll
+*.exe
+*.out
+*.lib
+
+assets/
