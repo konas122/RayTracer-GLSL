@@ -1,10 +1,11 @@
+#include "util/debug.h"
 #include "accelerate/bvh.h"
 
 #include <array>
 #include <iostream>
 
 void BVH::build(std::vector<Triangle> &&triangles) {
-    root = std::make_shared<BVHTreeNode>();
+    root = allocator.allocate();
     root->triangles = std::move(triangles);
     root->updateBounds();
     root->depth = 1;
@@ -12,12 +13,20 @@ void BVH::build(std::vector<Triangle> &&triangles) {
     size_t triangle_count = root->triangles.size();
     recursiveSplit(root, state);
 
+    std::cout << "Total Node Count: " << state.total_node_count << std::endl;
+    std::cout << "Leaf Node Count: " << state.leaf_node_count << std::endl;
+    std::cout << "Triangle Count: " << triangle_count << std::endl;
+    std::cout << "Mean Leaf Node Triangle Count: "
+              << static_cast<float>(triangle_count) / static_cast<float>(state.leaf_node_count)
+              << std::endl;
+    std::cout << "Max Leaf Node Triangle Count: " << state.max_leaf_node_triangle_count << std::endl;
+
     nodes.reserve(state.total_node_count);
     ordered_triangles.reserve(triangle_count);
     recursiveFlatten(root);
 }
 
-void BVH::recursiveSplit(std::shared_ptr<BVHTreeNode> node, BVHState &state) {
+void BVH::recursiveSplit(BVHTreeNode *node, BVHState &state) {
     state.total_node_count ++;
     if (node->triangles.size() == 1 || node->depth > 32) {
         state.addLeafNode(node);
@@ -88,8 +97,8 @@ void BVH::recursiveSplit(std::shared_ptr<BVHTreeNode> node, BVHState &state) {
         return;
     }
 
-    node->left = std::make_shared<BVHTreeNode>();
-    node->right = std::make_shared<BVHTreeNode>();
+    node->left = allocator.allocate();
+    node->right = allocator.allocate();
 
     node->left->triangles.reserve(min_child0_triangle_count);
     node->right->triangles.reserve(min_child1_triangle_count);
@@ -115,7 +124,7 @@ void BVH::recursiveSplit(std::shared_ptr<BVHTreeNode> node, BVHState &state) {
     recursiveSplit(node->right, state);
 }
 
-size_t BVH::recursiveFlatten(std::shared_ptr<BVHTreeNode> node) {
+size_t BVH::recursiveFlatten(BVHTreeNode *node) {
     BVHNode bvh_node{
         node->bounds,
         0,
@@ -141,7 +150,7 @@ size_t BVH::recursiveFlatten(std::shared_ptr<BVHTreeNode> node) {
 std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) const {
     std::optional<HitInfo> closest_hit_info;
 
-    size_t bounds_test_count = 0, triangle_test_count = 0;
+    DEBUG_LINE(size_t bounds_test_count = 0, triangle_test_count = 0)
 
     glm::bvec3 dir_is_neg = {
         ray.direction.x < 0,
@@ -155,8 +164,8 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     size_t current_node_index = 0;
 
     while (true) {
-        auto &node = nodes[current_node_index];
-        bounds_test_count++;
+        const auto &node = nodes[current_node_index];
+        DEBUG_LINE(bounds_test_count++)
         if (!node.bounds.hasIntersection(ray, inv_direction, t_min, t_max)) {
             if (ptr == stack.begin()) {
                 break;
@@ -177,14 +186,14 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
         }
         else {
             auto triangle_iter = ordered_triangles.begin() + node.triangle_index;
-            triangle_test_count += node.triangle_count;
+            DEBUG_LINE(triangle_test_count += node.triangle_count)
             for (size_t i = 0; i < node.triangle_count; i ++) {
                 auto hit_info = triangle_iter->intersect(ray, t_min, t_max);
                 ++triangle_iter;
                 if (hit_info) {
                     t_max = hit_info->t;
                     closest_hit_info = hit_info;
-                    closest_hit_info->bounds_depth = node.depth;
+                    DEBUG_LINE(closest_hit_info->bounds_depth = node.depth)
                 }
             }
             if (ptr == stack.begin()) {
@@ -195,8 +204,8 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     }
 
     if (closest_hit_info.has_value()) {
-        closest_hit_info->bounds_test_count = bounds_test_count;
-        closest_hit_info->triangle_test_count = triangle_test_count;
+        DEBUG_LINE(closest_hit_info->bounds_test_count = bounds_test_count)
+        DEBUG_LINE(closest_hit_info->triangle_test_count = triangle_test_count)
     }
 
     return closest_hit_info;

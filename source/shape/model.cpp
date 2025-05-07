@@ -7,7 +7,7 @@
 #include <rapidobj/rapidobj.hpp>
 
 Model::Model(const std::filesystem::path &filename) {
-    // PROFILE("LoadModel")
+    PROFILE("LoadModel")
 
     std::vector<Triangle> triangles;
 

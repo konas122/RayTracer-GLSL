@@ -31,6 +31,10 @@ ThreadPool *ThreadPool::getThreadPool() {
 
 void ThreadPool::WorkerThread(ThreadPool *master) {
     while (master->alive == 1) {
+        if (master->tasks.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            continue;
+        }
         auto task = master->getTask();
         if (task != nullptr) {
             task->run();

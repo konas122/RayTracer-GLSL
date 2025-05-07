@@ -1,6 +1,7 @@
 #ifndef __RAY_H__
 #define __RAY_H__
 
+#include "util/debug.h"
 #include "shape/material.h"
 #include <glm/glm.hpp>
 
@@ -20,9 +21,9 @@ struct HitInfo {
     glm::vec3 normal;
     const Material *material = nullptr;
 
-    size_t bounds_test_count = 0;
-    size_t triangle_test_count = 0;
-    size_t bounds_depth = 0;
+    DEBUG_LINE(size_t bounds_test_count = 0)
+    DEBUG_LINE(size_t triangle_test_count = 0)
+    DEBUG_LINE(size_t bounds_depth = 0)
 };
 
 #endif

@@ -9,6 +9,7 @@
 #include "shape/sphere.h"
 #include "thread/thread_pool.h"
 #include "renderer/normal.h"
+#include "renderer/debugRT.h"
 #include "renderer/simpleRT.h"
 
 #include <iostream>
@@ -54,8 +55,12 @@ int main() {
 
     NormalRenderer normal_renderer{camera, scene};
     normal_renderer.render(1, "normal.ppm");
-
-    film.clear();
+    BoundsTestCountRenderer btc_renderer{camera, scene};
+    btc_renderer.render(1, "BTC.ppm");
+    TriangleTestCountRenderer ttc_renderer{camera, scene};
+    ttc_renderer.render(1, "TTC.ppm");
+    BoundsDepthRenderer bd_renderer{camera, scene};
+    bd_renderer.render(1, "BD.ppm");
 
     SimpleRTRenderer simple_rt_renderer{camera, scene};
     simple_rt_renderer.render(32, "test.ppm");
