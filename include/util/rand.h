@@ -6,13 +6,13 @@
 class RNG {
 public:
     RNG() {}
-    float uniform() {
+    float uniform() const {
         return uniform_distribution(gen);
     }
 
 private:
-    std::mt19937 gen = std::mt19937{};
-    std::uniform_real_distribution<float> uniform_distribution{0, 1};
+    mutable std::mt19937 gen = std::mt19937{};
+    mutable std::uniform_real_distribution<float> uniform_distribution{0, 1};
 };
 
 #endif

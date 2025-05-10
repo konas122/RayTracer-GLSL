@@ -46,7 +46,7 @@ struct RGB {
             RGB{253, 231, 37},
         };
 
-        if (t < 0 || t >= 0.96) {
+        if (t < 0 || t >= 0.95999) {
             return RGB{255, 0, 0};
         }
         float idx_float = t * color_pallet.size();

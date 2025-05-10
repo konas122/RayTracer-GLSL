@@ -2,13 +2,8 @@
 #define __SCENE_H__
 
 #include "shape.h"
+#include "accelerate/scene_bvh.h"
 
-struct ShapeInstance {
-    const Shape &shape;
-    Material materail;
-    glm::mat4 world_from_object;
-    glm::mat4 object_from_world;
-};
 
 struct Scene : public Shape {
 public:
@@ -26,8 +21,13 @@ public:
         float t_max = std::numeric_limits<float>::infinity()
     ) const override;
 
+    void build() {
+        scene_bvh.build(std::move(instances));
+    }
+
 private:
     std::vector<ShapeInstance> instances;
+    SceneBVH scene_bvh {};
 };
 
 #endif

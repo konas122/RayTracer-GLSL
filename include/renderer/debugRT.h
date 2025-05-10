@@ -7,6 +7,4 @@ DEFINE_RENDERER(BoundsTestCount)
 
 DEFINE_RENDERER(TriangleTestCount)
 
-DEFINE_RENDERER(BoundsDepth)
-
 #endif

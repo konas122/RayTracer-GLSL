@@ -12,7 +12,7 @@ Camera::Camera(Film &film, const glm::vec3 &pos, const glm::vec3 &viewpoint, flo
             1.f, 2.f
         )
     );
-    world_from_camera = glm::inverse(glm::lookAt(pos, viewpoint, { 0, 1, 0 }));
+    world_from_camera = glm::inverse(glm::lookAt(pos, viewpoint, {0, 1, 0}));
 }
 
 Ray Camera::generateRay(const glm::ivec2 &pixel_coord, const glm::vec2 &offset) const {
@@ -21,7 +21,7 @@ Ray Camera::generateRay(const glm::ivec2 &pixel_coord, const glm::vec2 &offset) 
     // [0, 1] --> [-1, 1]
     ndc = 2.f * ndc - 1.f;
     // (x, y, 0, near) -> (x/near, y/near, 0, 1)
-    glm::vec4 clip { ndc, 0, 1 };
+    glm::vec4 clip{ndc, 0, 1};
     glm::vec3 world = world_from_camera * camera_from_clip * clip;
     return Ray {
         pos,

@@ -16,7 +16,7 @@ std::optional<HitInfo> Sphere::intersect(const Ray &ray, float t_min, float t_ma
     if (hit_t > t_min && hit_t < t_max) {
         glm::vec3 hit_point = ray.hit(hit_t);
         glm::vec3 normal = glm::normalize(hit_point - center);
-        return HitInfo { hit_t, hit_point, normal };
+        return HitInfo{hit_t, hit_point, normal};
     }
     return {};
 }

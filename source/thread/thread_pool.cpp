@@ -1,3 +1,4 @@
+#include <cmath>
 #include "util/profile.h"
 #include "thread/thread_pool.h"
 
@@ -75,11 +76,11 @@ void ThreadPool::parallelFor(
 
     Guard guard(spin_lock);
 
-    float chunk_width_float = static_cast<float>(width / sqrt(threads.size()));
-    float chunk_height_float = static_cast<float>(height / sqrt(threads.size()));
+    float chunk_width_float = static_cast<float>(width / std::sqrt(threads.size()));
+    float chunk_height_float = static_cast<float>(height / std::sqrt(threads.size()));
     if (complex) {
-        chunk_width_float = static_cast<float>(chunk_width_float / sqrt(16));
-        chunk_height_float = static_cast<float>(chunk_height_float / sqrt(16));
+        chunk_width_float = static_cast<float>(chunk_width_float / std::sqrt(16));
+        chunk_height_float = static_cast<float>(chunk_height_float / std::sqrt(16));
     }
     size_t chunk_width = static_cast<size_t>(std::ceil(chunk_width_float));
     size_t chunk_height = static_cast<size_t>(std::ceil(chunk_height_float));

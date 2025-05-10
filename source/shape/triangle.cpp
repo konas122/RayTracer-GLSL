@@ -22,7 +22,7 @@ std::optional<HitInfo> Triangle::intersect(const Ray &ray, float t_min, float t_
     if (hit_t > t_min && hit_t < t_max) {
         glm::vec3 hit_point = ray.hit(hit_t);
         glm::vec3 normal = (1.f - u - v) * n0 + u * n1 + v * n2;
-        return HitInfo { hit_t, hit_point, glm::normalize(normal) };
+        return HitInfo{hit_t, hit_point, glm::normalize(normal)};
     }
     return {};
 }
