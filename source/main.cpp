@@ -12,14 +12,21 @@
 #include "renderer/pathRT.h"
 #include "renderer/debugRT.h"
 
+#include "material/ground.h"
+#include "material/diffuse.h"
+#include "material/specular.h"
+#include "material/conductor.h"
+#include "material/dielectric.h"
+
+#include <memory>
 #include <iostream>
 
 
 int main() {
     Film film{192 * 4, 108 * 4};
-    Camera camera{film, {-12, 5, -12}, {0, 0, 0}, 45};
+    Camera camera{film, {-10, 2, 0}, {0, 1.5, 0}, 45};
 
-    Model model("assets/dragon_87k.obj");
+    Model model("assets/dragon_871k.obj");
     Sphere sphere{
         {0, 0, 0},
         1
@@ -29,54 +36,74 @@ int main() {
         {0, 1, 0}
     };
 
-    Scene scene {};
     RNG rng{};
-    for (int i = 0; i < 10000; i ++) {
-        glm::vec3 random_pos{
-            rng.uniform() * 100 - 50,
-            rng.uniform() * 2,
-            rng.uniform() * 100 - 50,
-        };
-        float u = rng.uniform();
-        if (u < 0.9) {
-            scene.addShape(
-                model,
-                {RGB(202, 159, 117), rng.uniform() > 0.5},
-                random_pos,
-                {1, 1, 1},
-                {rng.uniform() * 360, rng.uniform() * 360, rng.uniform() * 360}
-            );
-        }
-        else if (u < 0.95) {
-            scene.addShape(
-                sphere,
-                {{rng.uniform(), rng.uniform(), rng.uniform()}, true},
-                random_pos,
-                {0.4, 0.4, 0.4}
-            );
-        }
-        else {
-            random_pos.y += 6;
-            scene.addShape(
-                sphere,
-                {{1, 1, 1}, false, {rng.uniform() * 4, rng.uniform() * 4, rng.uniform() * 4}},
-                random_pos
-            );
-        }
+    Scene scene{};
+    for (int i = -3; i <= 3; i ++) {
+        scene.addShape(
+            sphere,
+            std::make_shared<DielectricMaterial>(1.f + 0.2f * (i + 3), glm::vec3(1, 1, 1)),
+            {0, 0.5, i * 2},
+            {0.8, 0.8, 0.8}
+        );
     }
-    scene.addShape(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    for (int i = 0; i <= 3; i ++) {
+        scene.addShape(
+            sphere,
+            std::make_shared<DiffuseMaterial>(glm::vec3(rng.uniform(), rng.uniform(), rng.uniform())),
+            {0, 4.5, i * 2},
+            {0.8, 0.8, 0.8}
+        );
+    }
+    for (int i = -3; i < 0; i ++) {
+        scene.addShape(
+            sphere,
+            std::make_shared<SpecularMaterial>(glm::vec3(rng.uniform(), rng.uniform(), rng.uniform())),
+            {0, 4.5, i * 2},
+            {0.8, 0.8, 0.8}
+        );
+    }
+    for (int i = -3; i <= 3; i ++) {
+        glm::vec3 c = RGB::GenerateHeatmapRGB((i + 3.f) / 6.f);
+        scene.addShape(
+            sphere,
+            std::make_shared<ConductorMaterial>(
+                glm::vec3(2.f - c * 2.f),
+                glm::vec3(2.f + c * 3.f)
+            ),
+            {0, 2.5, i * 2},
+            {0.8, 0.8, 0.8}
+        );
+    }
+    scene.addShape(
+        model,
+        std::make_shared<DielectricMaterial>(1.8, RGB(128, 191, 131)),
+        {-5, 0.4, 1.5},
+        {2, 2, 2}
+    );
+    scene.addShape(
+        model,
+        std::make_shared<ConductorMaterial>(
+            glm::vec3(0.1, 1.2, 1.8),
+            glm::vec3(5, 2.5, 2)),
+        {-5, 0.4, -1.5},
+        {2, 2, 2}
+    );
+    scene.addShape(plane, std::make_shared<GroundMaterial>(RGB(120, 204, 157)), {0, -0.5, 0});
+    auto light_material = std::make_shared<DiffuseMaterial>(glm::vec3(1, 1, 1));
+    light_material->setEmissive({0.95, 0.95, 1});
+    scene.addShape(plane, light_material, {0, 10, 0});
     scene.build();
 
-    // NormalRenderer normal_renderer{camera, scene};
-    // normal_renderer.render(1, "normal.ppm");
+    NormalRenderer normal_renderer{camera, scene};
+    normal_renderer.render(1, "normal.ppm");
 
-    // BoundsTestCountRenderer btc_renderer{camera, scene};
-    // btc_renderer.render(1, "BTC.ppm");
-    // TriangleTestCountRenderer ttc_renderer{camera, scene};
-    // ttc_renderer.render(1, "TTC.ppm");
+    BoundsTestCountRenderer btc_renderer{camera, scene};
+    btc_renderer.render(1, "BTC.ppm");
+    TriangleTestCountRenderer ttc_renderer{camera, scene};
+    ttc_renderer.render(1, "TTC.ppm");
 
     PathTracingRenderer path_tracing_renderer{camera, scene};
-    path_tracing_renderer.render(32, "PT_cosine_test.ppm");
+    path_tracing_renderer.render(128, "PT_cosine_test.ppm");
 
     return 0;
 }

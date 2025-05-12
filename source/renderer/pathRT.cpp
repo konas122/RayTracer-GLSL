@@ -1,12 +1,15 @@
+#include "util/rand.h"
 #include "util/frame.h"
 #include "renderer/pathRT.h"
 #include "sample/spherical.h"
 
-glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
+glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
+    thread_local RNG rng{static_cast<size_t>(pixel_coord.x * 1000000 + pixel_coord.y + pixel_coord.z * 10000000)};
+
     auto ray = camera.generateRay(pixel_coord, { rng.uniform(), rng.uniform() });
     glm::vec3 beta = {1, 1, 1};
     glm::vec3 L = {0, 0, 0};
-    float q = 0.9;
+    float q = 0.9f;
 
     while (true) {
         auto hit_info = scene.intersect(ray);
@@ -15,16 +18,21 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
             if (rng.uniform() > q) {
                 break;
             }
-            beta *= hit_info->material->albedo / q;
+            beta /= q;
 
             Frame frame(hit_info->normal);
             glm::vec3 light_direction;
-            if (hit_info->material->is_specular) {
+            if (hit_info->material) {
                 glm::vec3 view_direction = frame.localFromWorld(-ray.direction);
-                light_direction = {-view_direction.x, view_direction.y, -view_direction.z};
+                auto bsdf_sample = hit_info->material->sampleBSDF(hit_info->hit_point, view_direction, rng);
+                if (!bsdf_sample.has_value()) {
+                    break;
+                }
+                beta *= bsdf_sample->bsdf * glm::abs(bsdf_sample->light_direction.y) / bsdf_sample->pdf;
+                light_direction = bsdf_sample->light_direction;
             }
             else {
-                light_direction = CosineSampleHemisphere({ rng.uniform(), rng.uniform() });
+                break;
             }
 
             ray.origin = hit_info->hit_point;

@@ -1,6 +1,8 @@
 #ifndef __SCENE_H__
 #define __SCENE_H__
 
+#include <memory>
+
 #include "shape.h"
 #include "accelerate/scene_bvh.h"
 
@@ -9,7 +11,7 @@ struct Scene : public Shape {
 public:
     void addShape(
         const Shape &shape,
-        const Material &material = {},
+        const std::shared_ptr<Material> material,
         const glm::vec3 &pos = {0, 0, 0},
         const glm::vec3 &scale = {1, 1, 1},
         const glm::vec3 &rotate = {0, 0, 0}

@@ -3,7 +3,7 @@
 
 
 void Scene::addShape(
-    const Shape &shape, const Material &material, const glm::vec3 &pos, const glm::vec3 &scale, const glm::vec3 &rotate
+    const Shape &shape, const std::shared_ptr<Material> material, const glm::vec3 &pos, const glm::vec3 &scale, const glm::vec3 &rotate
 ) {
     glm::mat4 world_from_object =
         glm::translate(glm::mat4(1.f), pos) *

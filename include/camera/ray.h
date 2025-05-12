@@ -2,7 +2,7 @@
 #define __RAY_H__
 
 #include "util/debug.h"
-#include "shape/material.h"
+#include "material/material.h"
 #include <glm/glm.hpp>
 
 
@@ -22,7 +22,7 @@ struct HitInfo {
     float t;
     glm::vec3 hit_point;
     glm::vec3 normal;
-    const Material *material = nullptr;
+    std::shared_ptr<Material> material;
 };
 
 #endif

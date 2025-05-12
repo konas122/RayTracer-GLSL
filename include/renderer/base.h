@@ -1,7 +1,6 @@
 #ifndef __BASE_H__
 #define __BASE_H__
 
-#include "util/rand.h"
 #include "shape/scene.h"
 #include "camera/camera.h"
 
@@ -13,7 +12,7 @@
         Name##Renderer(Camera &camera, const Scene &scene) : BaseRenderer(camera, scene) {} \
                                                                                             \
     private:                                                                                \
-        glm::vec3 renderPixel(const glm::ivec2 &pixel_coord) override;                      \
+        glm::vec3 renderPixel(const glm::ivec3 &pixel_coord) override;                      \
     };
 
 
@@ -25,12 +24,11 @@ public:
     void render(const size_t spp, const std::filesystem::path &filename);
 
 private:
-    virtual glm::vec3 renderPixel(const glm::ivec2 &pixel_coord) = 0;
+    virtual glm::vec3 renderPixel(const glm::ivec3 &pixel_coord) = 0;
 
 protected:
     Camera &camera;
     const Scene &scene;
-    RNG rng {};
 };
 
 #endif

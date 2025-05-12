@@ -6,6 +6,9 @@
 class RNG {
 public:
     RNG() {}
+    RNG(size_t seed) {
+        gen.seed(seed);
+    }
     float uniform() const {
         return uniform_distribution(gen);
     }

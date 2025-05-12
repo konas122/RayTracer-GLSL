@@ -16,7 +16,7 @@ void BaseRenderer::render(const size_t spp, const std::filesystem::path &file) {
             film.getWidth(), film.getHeight(),
             [&](size_t x, size_t y) {
                 for (int i = 0; i < static_cast<int>(increase); i ++) {
-                    film.addSample(x, y, renderPixel({ x, y }));
+                    film.addSample(x, y, renderPixel({x, y, current_spp + i}));
                 }
                 progress.update(increase);
             }

@@ -14,7 +14,7 @@ struct RGB {
     }
 
     static RGB GenerateHeatmapRGB(float t) {
-        static std::array<RGB, 25> color_pallet{
+        static const std::array<RGB, 25> color_pallet{
             RGB{68, 1, 84},
             RGB{71, 17, 100},
             RGB{72, 31, 112},
@@ -46,10 +46,10 @@ struct RGB {
             RGB{253, 231, 37},
         };
 
-        if (t < 0 || t >= 0.95999) {
+        if (t < 0 || t >= 1) {
             return RGB{255, 0, 0};
         }
-        float idx_float = t * color_pallet.size();
+        float idx_float = t * (color_pallet.size() - 1);
         size_t idx = static_cast<size_t>(glm::floor(idx_float));
         return Lerp(color_pallet[idx], color_pallet[idx + 1], glm::fract(idx_float));
     }
