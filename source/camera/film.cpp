@@ -10,7 +10,7 @@ Film::Film(size_t width, size_t height) : width(width), height(height) {
     pixels.resize(width * height);
 }
 
-void Film::save(const std::filesystem::path &filename) {
+void Film::save(const std::filesystem::path &filename) const {
     // PROFILE("Film::save")
 
     std::ofstream file(filename, std::ios::binary);
@@ -36,4 +36,26 @@ void Film::save(const std::filesystem::path &filename) {
     ThreadPool::getThreadPool()->wait();
 
     file.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
+}
+
+
+std::vector<uint8_t> Film::generateRGBABuffer() {
+    std::vector<uint8_t> buffer(width * height * 4);
+
+    for (size_t y = 0; y < height; y ++) {
+        for (size_t x = 0; x < width; x ++) {
+            auto pixel = getPixel(x, y);
+            if (pixel.sample_count == 0) {
+                continue;;
+            }
+            RGB rgb(pixel.color / static_cast<float>(pixel.sample_count));
+            auto idx = (y * width + x) * 4;
+            buffer[idx + 0] = rgb.r;
+            buffer[idx + 1] = rgb.g;
+            buffer[idx + 2] = rgb.b;
+            buffer[idx + 3] = 255;
+        }
+    }
+
+    return buffer;
 }

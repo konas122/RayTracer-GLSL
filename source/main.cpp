@@ -18,12 +18,14 @@
 #include "material/conductor.h"
 #include "material/dielectric.h"
 
+#include "renderer/previewer.h"
+
 #include <memory>
 #include <iostream>
 
 
 int main() {
-    Film film{192 * 10, 108 * 10};
+    Film film{192 * 4, 108 * 4};
     Camera camera{film, {-10, 2, 0}, {0, 1.5, 0}, 45};
 
     Model model("assets/dragon_871k.obj");
@@ -106,16 +108,19 @@ int main() {
     scene.addShape(plane, light_material, {0, 10, 0});
     scene.build();
 
-    NormalRenderer normal_renderer{camera, scene};
-    normal_renderer.render(1, "normal.ppm");
+    // NormalRenderer normal_renderer{camera, scene};
+    // normal_renderer.render(1, "normal.ppm");
 
-    BoundsTestCountRenderer btc_renderer{camera, scene};
-    btc_renderer.render(1, "BTC.ppm");
-    TriangleTestCountRenderer ttc_renderer{camera, scene};
-    ttc_renderer.render(1, "TTC.ppm");
+    // BoundsTestCountRenderer btc_renderer{camera, scene};
+    // btc_renderer.render(1, "BTC.ppm");
+    // TriangleTestCountRenderer ttc_renderer{camera, scene};
+    // ttc_renderer.render(1, "TTC.ppm");
 
     PathTracingRenderer path_tracing_renderer{camera, scene};
-    path_tracing_renderer.render(4096, "PT_microfacet_test.ppm");
+    Previewer previewer(path_tracing_renderer);
+    if (previewer.preview()) {
+        path_tracing_renderer.render(4096, "PT_microfacet_test.ppm");
+    }
 
     return 0;
 }

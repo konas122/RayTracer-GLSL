@@ -17,6 +17,8 @@
 
 
 class BaseRenderer {
+    friend class Previewer;
+
 public:
     BaseRenderer(Camera &camera, const Scene &scene) : camera(camera), scene(scene) {}
     virtual ~BaseRenderer() = default;

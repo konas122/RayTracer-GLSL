@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(third-party/glm)
+add_subdirectory(third-party/SFML)
 add_subdirectory(third-party/rapidobj)
 
 add_subdirectory(source)

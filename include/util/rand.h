@@ -9,6 +9,11 @@ public:
     RNG(size_t seed) {
         gen.seed(seed);
     }
+
+    void setSeed(const size_t seed) const {
+        gen.seed(seed);
+    }
+
     float uniform() const {
         return uniform_distribution(gen);
     }
