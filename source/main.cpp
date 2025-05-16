@@ -23,7 +23,7 @@
 
 
 int main() {
-    Film film{192 * 4, 108 * 4};
+    Film film{192 * 10, 108 * 10};
     Camera camera{film, {-10, 2, 0}, {0, 1.5, 0}, 45};
 
     Model model("assets/dragon_871k.obj");
@@ -41,7 +41,12 @@ int main() {
     for (int i = -3; i <= 3; i ++) {
         scene.addShape(
             sphere,
-            std::make_shared<DielectricMaterial>(1.f + 0.2f * (i + 3), glm::vec3(1, 1, 1)),
+            std::make_shared<DielectricMaterial>(
+                1.f + 0.2f * (i + 3),
+                glm::vec3(1, 1, 1),
+                (3.f - i) / 18.f,
+                (3.f - i) / 6.f
+            ),
             {0, 0.5, i * 2},
             {0.8, 0.8, 0.8}
         );
@@ -68,7 +73,9 @@ int main() {
             sphere,
             std::make_shared<ConductorMaterial>(
                 glm::vec3(2.f - c * 2.f),
-                glm::vec3(2.f + c * 3.f)
+                glm::vec3(2.f + c * 3.f),
+                (3.f - i) / 18.f,
+                (3.f - i) / 6.f
             ),
             {0, 2.5, i * 2},
             {0.8, 0.8, 0.8}
@@ -76,7 +83,10 @@ int main() {
     }
     scene.addShape(
         model,
-        std::make_shared<DielectricMaterial>(1.8, RGB(128, 191, 131)),
+        std::make_shared<DielectricMaterial>(
+            1.8, RGB(128, 191, 131),
+            0.4, 0.4
+        ),
         {-5, 0.4, 1.5},
         {2, 2, 2}
     );
@@ -84,13 +94,15 @@ int main() {
         model,
         std::make_shared<ConductorMaterial>(
             glm::vec3(0.1, 1.2, 1.8),
-            glm::vec3(5, 2.5, 2)),
+            glm::vec3(5, 2.5, 2),
+            0.4, 0.4
+        ),
         {-5, 0.4, -1.5},
         {2, 2, 2}
     );
     scene.addShape(plane, std::make_shared<GroundMaterial>(RGB(120, 204, 157)), {0, -0.5, 0});
     auto light_material = std::make_shared<DiffuseMaterial>(glm::vec3(1, 1, 1));
-    light_material->setEmissive({0.95, 0.95, 1});
+    light_material->setEmissive({0.95 * 2, 0.95 * 2, 1 * 2});
     scene.addShape(plane, light_material, {0, 10, 0});
     scene.build();
 
@@ -103,7 +115,7 @@ int main() {
     ttc_renderer.render(1, "TTC.ppm");
 
     PathTracingRenderer path_tracing_renderer{camera, scene};
-    path_tracing_renderer.render(128, "PT_cosine_test.ppm");
+    path_tracing_renderer.render(4096, "PT_microfacet_test.ppm");
 
     return 0;
 }
