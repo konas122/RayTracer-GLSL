@@ -7,7 +7,6 @@
 #include "shape/plane.h"
 #include "shape/scene.h"
 #include "shape/sphere.h"
-#include "thread/thread_pool.h"
 #include "renderer/normal.h"
 #include "renderer/pathRT.h"
 #include "renderer/debugRT.h"
@@ -21,7 +20,6 @@
 #include "renderer/previewer.h"
 
 #include <memory>
-#include <iostream>
 
 
 int main() {
@@ -108,19 +106,19 @@ int main() {
     scene.addShape(plane, light_material, {0, 10, 0});
     scene.build();
 
-    // NormalRenderer normal_renderer{camera, scene};
-    // normal_renderer.render(1, "normal.ppm");
+    NormalRenderer normal_renderer{camera, scene};
+    normal_renderer.render(1, "normal.ppm");
 
-    // BoundsTestCountRenderer btc_renderer{camera, scene};
-    // btc_renderer.render(1, "BTC.ppm");
-    // TriangleTestCountRenderer ttc_renderer{camera, scene};
-    // ttc_renderer.render(1, "TTC.ppm");
+    BoundsTestCountRenderer btc_renderer{camera, scene};
+    btc_renderer.render(1, "BTC.ppm");
+    TriangleTestCountRenderer ttc_renderer{camera, scene};
+    ttc_renderer.render(1, "TTC.ppm");
 
     PathTracingRenderer path_tracing_renderer{camera, scene};
     Previewer previewer(path_tracing_renderer);
-    if (previewer.preview()) {
-        path_tracing_renderer.render(4096, "PT_microfacet_test.ppm");
-    }
+    // if (previewer.preview()) {
+        path_tracing_renderer.render(32, "PT_microfacet_test.ppm");
+    // }
 
     return 0;
 }

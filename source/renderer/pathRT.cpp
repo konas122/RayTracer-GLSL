@@ -1,7 +1,6 @@
 #include "util/rand.h"
 #include "util/frame.h"
 #include "renderer/pathRT.h"
-#include "sample/spherical.h"
 
 glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
     thread_local RNG rng {};
