@@ -3,8 +3,7 @@
 
 #include "bound.h"
 #include "shape/triangle.h"
-
-#include <variant>
+#include "sample/alias_table.h"
 
 
 struct BVHTreeNode {
@@ -82,6 +81,9 @@ public:
         return nodes[0].bounds;
     }
 
+    float getArea() const override { return area; }
+    std::optional<ShapeSample> sampleShape(const RNG &rng) const override;
+
 private:
     void recursiveSplit(BVHTreeNode *node, BVHState &state);
     size_t recursiveFlatten(BVHTreeNode *node);
@@ -91,6 +93,9 @@ private:
     BVHTreeNode *root;
     std::vector<BVHNode> nodes;
     std::vector<Triangle> ordered_triangles;
+
+    float area;
+    AliasTable alias_table;
 };
 
 #endif

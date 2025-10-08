@@ -5,6 +5,9 @@
 
 #include "shape.h"
 #include "accelerate/scene_bvh.h"
+#include "light/area_light.hpp"
+#include "light/infinite_light.hpp"
+#include "light/light_sampler.hpp"
 
 
 struct Scene : public Shape {
@@ -25,11 +28,34 @@ public:
 
     void build() {
         scene_bvh.build(std::move(instances));
+        auto scene_bounds = scene_bvh.getBounds();
+        radius = 0.5 * glm::distance(scene_bounds.b_max, scene_bounds.b_min);
+        light_sampler.build(radius);
     }
+
+
+    void addAreaLight(const AreaLight *area_light, const std::shared_ptr<Material> material) {
+        material->area_light = area_light;
+        addShape(area_light->getShape(), material);
+        light_sampler.addLight(area_light);
+    }
+
+    void addInfiniteLight(const InfiniteLight *infinite_light) {
+        light_sampler.addLight(infinite_light);
+        infinite_lights.emplace_back(infinite_light);
+    }
+
+    const LightSampler &getLightSampler() const { return light_sampler; }
+    float getRadius() const { return radius; }
+    const std::vector<const InfiniteLight *> &getInfiniteLights() const { return infinite_lights; }
 
 private:
     std::vector<ShapeInstance> instances;
     SceneBVH scene_bvh {};
+
+    LightSampler light_sampler;
+    float radius;
+    std::vector<const InfiniteLight *> infinite_lights;
 };
 
 #endif

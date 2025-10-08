@@ -21,6 +21,13 @@ public:
     Bounds getBounds() const override {
         return bvh.getBounds();
     }
+    float getArea() const override {
+        return bvh.getArea();
+    }
+
+    std::optional<ShapeSample> sampleShape(const RNG &rng) const override {
+        return bvh.sampleShape(rng);
+    }
 
 private:
     BVH bvh{};

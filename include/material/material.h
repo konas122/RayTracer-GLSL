@@ -15,14 +15,13 @@ struct BSDFSample {
 struct Material {
     // BSDF = BRDF + BTDF
     virtual std::optional<BSDFSample> sampleBSDF(const glm::vec3 &hit_point, const glm::vec3 &view_direction, const RNG &rng) const = 0;
-    void setEmissive(const glm::vec3 &emissive) { this->emissive = emissive; }
+    virtual glm::vec3 BSDF(const glm::vec3 &hit_point, const glm::vec3 &light_direction, const glm::vec3 &view_direction) const = 0;
+    virtual bool isDeltaDistribution() const = 0;
 
 public:
-    glm::vec3 albedo = {1, 1, 1};
-    glm::vec3 emissive = {0, 0, 0};
+    const class AreaLight *area_light { nullptr };
 
     Material() = default;
-    Material(const glm::vec3 &albedo) : albedo(albedo) {}
 };
 
 #endif

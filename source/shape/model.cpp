@@ -1,9 +1,6 @@
 #include "shape/model.h"
 #include "util/profile.h"
 
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <rapidobj/rapidobj.hpp>
 
 Model::Model(const std::filesystem::path &filename) {

@@ -14,6 +14,10 @@ struct Sphere : public Shape{
     Bounds getBounds() const override {
         return {center - radius, center + radius};
     }
+
+    float getArea() const override;
+
+    virtual std::optional<ShapeSample> sampleShape(const RNG &rng) const override;
 };
 
 #endif

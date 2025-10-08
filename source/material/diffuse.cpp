@@ -10,3 +10,11 @@ std::optional<BSDFSample> DiffuseMaterial::sampleBSDF(const glm::vec3 &hit_point
     glm::vec3 bsdf = albedo / PI;
     return BSDFSample{bsdf, pdf, light_direction * glm::sign(view_direction.y)};
 }
+
+glm::vec3 DiffuseMaterial::BSDF(const glm::vec3 &hit_point, const glm::vec3 &light_direction, const glm::vec3 &view_direction) const {
+    if (light_direction.y * view_direction.y <= 0) {
+        return {};
+    }
+    return albedo / PI;
+}
+

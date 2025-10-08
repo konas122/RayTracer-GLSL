@@ -12,5 +12,6 @@ build/
 *.exe
 *.out
 *.lib
+*.ppm
 
 assets/

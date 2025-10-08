@@ -1,6 +1,5 @@
 #include "util/rgb.h"
 #include "util/rand.h"
-#include "util/frame.h"
 #include "camera/film.h"
 #include "camera/camera.h"
 #include "shape/model.h"
@@ -33,7 +32,8 @@ int main() {
     };
     Plane plane{
         {0, 0, 0},
-        {0, 1, 0}
+        {0, 1, 0},
+        100
     };
 
     RNG rng{};
@@ -101,9 +101,20 @@ int main() {
         {2, 2, 2}
     );
     scene.addShape(plane, std::make_shared<GroundMaterial>(RGB(120, 204, 157)), {0, -0.5, 0});
-    auto light_material = std::make_shared<DiffuseMaterial>(glm::vec3(1, 1, 1));
-    light_material->setEmissive({0.95 * 2, 0.95 * 2, 1 * 2});
-    scene.addShape(plane, light_material, {0, 10, 0});
+    // auto light_material = std::make_shared<DiffuseMaterial>(glm::vec3(1, 1, 1));
+    // light_material->setEmissive({0.95 * 2, 0.95 * 2, 1 * 2});
+    // scene.addShape(plane, light_material, {0, 10, 0});
+    Sphere light_sphere {
+        { -2, 6, 0 },
+        0.5f
+    };
+    AreaLight *area_light = new AreaLight {
+        light_sphere,
+        { 0.95 * 100, 0.95 * 100, 1 * 100 },
+        false
+    };
+    scene.addAreaLight(area_light, std::make_shared<DiffuseMaterial>());
+    scene.addInfiniteLight(new InfiniteLight { { 0.9, 0.9, 0.7 } });
     scene.build();
 
     NormalRenderer normal_renderer{camera, scene};

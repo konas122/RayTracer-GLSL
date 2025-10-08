@@ -1,4 +1,5 @@
 #include "shape/triangle.h"
+#include "glm/geometric.hpp"
 
 std::optional<HitInfo> Triangle::intersect(const Ray &ray, float t_min, float t_max) const {
     glm::vec3 e1 = p1 - p0;
@@ -25,4 +26,26 @@ std::optional<HitInfo> Triangle::intersect(const Ray &ray, float t_min, float t_
         return HitInfo{hit_t, hit_point, glm::normalize(normal)};
     }
     return {};
+}
+
+
+float Triangle::getArea() const {
+    return 0.5f * glm::length(glm::cross(p2 - p1, p1 - p0));
+}
+
+std::optional<ShapeSample> Triangle::sampleShape(const RNG &rng) const {
+    float u = rng.uniform(), v = rng.uniform();
+    if (u > v) {
+        v *= 0.5;
+        u -= v;
+    }
+    else {
+        u *= 0.5;
+        v -= u;
+    }
+    return ShapeSample {
+        u * p0 + v * p1 + (1.f - u - v) * p2,
+        u * n0 + v * n1 + (1.f - u - v) * n2,
+        1.f / getArea()
+    };
 }
