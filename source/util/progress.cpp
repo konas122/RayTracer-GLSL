@@ -11,7 +11,7 @@ void Progress::update(size_t count) {
     Guard guard(spin_lock);
 
     current += count;
-    percent = static_cast<int>(100 * static_cast<float>(current) / static_cast<float>(total));
+    percent = 100 * static_cast<float>(current) / static_cast<float>(total);
     if ((percent - last_percent >= step) || (percent == 100)) {
         last_percent = percent;
         std::cout << percent << "%" << std::endl;

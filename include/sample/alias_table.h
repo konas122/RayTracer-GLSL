@@ -24,6 +24,7 @@ public:
     AliasTable() = default;
     void build(const std::vector<float> &values);
     SamepleResult sample(float u) const;
+    const std::vector<float>& getProbs() const { return probs; }
 
 private:
     std::vector<float> probs;

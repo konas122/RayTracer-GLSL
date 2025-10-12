@@ -96,7 +96,7 @@ void Camera::zoom(float delta) {
 void Camera::print() {
     auto viewpoint = pos + view_direction;
     printf("Camera:\n");
-    printf("\tFilm Resolution: (%lld, %lld)\n", film.getWidth(), film.getHeight());
+    printf("\tFilm Resolution: (%zu, %zu)\n", film.getWidth(), film.getHeight());
     printf("\tPosition: (%f, %f, %f)\n", pos.x, pos.y, pos.z);
     printf("\tViewpoint: (%f, %f, %f)\n", viewpoint.x, viewpoint.y, viewpoint.z);
     printf("\tFovy: %f\n", fovy);
