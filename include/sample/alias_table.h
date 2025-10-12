@@ -1,21 +1,22 @@
 #ifndef ALIAS_TABLE_HPP
 #define ALIAS_TABLE_HPP
 
+#include <cstddef>
 #include <vector>
 
 
 class AliasTable {
 private:
     struct Item {
-        float p;
+        double p;
         union {
-            float q;
-            int alias;
+            double q;
+            size_t alias;
         };
     };
 
     struct SamepleResult {
-        int index;
+        size_t index;
         float prob;
     };
 

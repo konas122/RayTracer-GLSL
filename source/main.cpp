@@ -127,9 +127,9 @@ int main() {
 
     PathTracingRenderer path_tracing_renderer{camera, scene};
     Previewer previewer(path_tracing_renderer);
-    // if (previewer.preview()) {
+    if (previewer.preview()) {
         path_tracing_renderer.render(32, "PT_microfacet_test.ppm");
-    // }
+    }
 
     return 0;
 }

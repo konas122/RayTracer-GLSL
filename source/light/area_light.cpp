@@ -13,10 +13,13 @@ std::optional<LightSample> AreaLight::sampleLight(const glm::vec3 &surface_point
     glm::vec3 light_direction_raw = shape_sample->point - surface_point;
     glm::vec3 light_direction = glm::normalize(light_direction_raw);
     float cos_theta = glm::dot(shape_sample->normal, -light_direction);
-    if ((!double_side) && cos_theta <= 0) {
+    if (cos_theta == 0) {
         return {};
     }
-    float det_J = cos_theta / glm::abs(glm::dot(light_direction_raw, light_direction_raw));
+    if ((!double_side) && cos_theta < 0) {
+        return {};
+    }
+    float det_J = glm::abs(cos_theta / glm::dot(light_direction_raw, light_direction_raw));
 
     return LightSample {
         shape_sample->point,
@@ -27,7 +30,11 @@ std::optional<LightSample> AreaLight::sampleLight(const glm::vec3 &surface_point
 }
 
 glm::vec3 AreaLight::getRadiance(const glm::vec3 &surface_point, const glm::vec3 &light_point, const glm::vec3 &normal) const {
-    if ((!double_side) && glm::dot(surface_point - light_point, normal) <= 0) {
+    const float cos_theta = glm::dot(surface_point - light_point, normal) <= 0;
+    if (cos_theta == 0) {
+        return {};
+    }
+    if ((!double_side) && cos_theta < 0) {
         return {};
     }
     return Le;

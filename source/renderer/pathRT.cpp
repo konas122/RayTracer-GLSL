@@ -12,15 +12,13 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
     float q = 0.9f;
 
     bool last_is_specular = true;
-    glm::vec3 last_surface_point = ray.origin;
 
     while (true) {
         auto hit_info = scene.intersect(ray);
         if (hit_info.has_value()) {
             if (last_is_specular && hit_info->material && hit_info->material->area_light) {
-                L += beta * hit_info->material->area_light->getRadiance(last_surface_point, hit_info->hit_point, hit_info->normal);
+                L += beta * hit_info->material->area_light->getRadiance(ray.origin, hit_info->hit_point, hit_info->normal);
             }
-            last_surface_point = hit_info->hit_point;
 
             if (rng.uniform() > q) {
                 break;
@@ -36,11 +34,8 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
                     continue;
                 }
 
-                if (hit_info->material->isDeltaDistribution()) {
-                    last_is_specular = true;
-                }
-                else {
-                    last_is_specular = false;
+                last_is_specular = hit_info->material->isDeltaDistribution();
+                if (!last_is_specular) {
                     auto light_source_sample = scene.getLightSampler().sample(rng.uniform());
                     if (light_source_sample.has_value()) {
                         auto light_sample = light_source_sample->light->sampleLight(
@@ -88,8 +83,8 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
                 for (const auto *infinite_light : scene.getInfiniteLights()) {
                     glm::vec3 light_direction = glm::normalize(ray.direction);
                     L += beta * infinite_light->getRadiance(
-                        last_surface_point,
-                        last_surface_point + scene.getRadius() * 2 * light_direction,
+                        ray.origin,
+                        ray.origin + scene.getRadius() * 2 * light_direction,
                         -light_direction
                     );
                 }

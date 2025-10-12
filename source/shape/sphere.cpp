@@ -11,7 +11,7 @@ std::optional<HitInfo> Sphere::intersect(const Ray &ray, float t_min, float t_ma
         return {};
     }
     float hit_t = static_cast<float>((-b - glm::sqrt(delta)) * 0.5 / a);
-    if (hit_t < 0) {
+    if (hit_t <= t_min) {
         hit_t = static_cast<float>((-b + glm::sqrt(delta)) * 0.5 / a);
     }
     if (hit_t > t_min && hit_t < t_max) {
