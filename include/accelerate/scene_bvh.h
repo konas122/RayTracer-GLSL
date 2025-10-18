@@ -3,11 +3,12 @@
 
 #include "bound.h"
 #include "shape/shape.h"
+#include "thread/spin_lock.h"
 
 
 struct ShapeInstance {
-    const Shape &shape;
-    const std::shared_ptr<Material> materail;
+    const Shape *shape;
+    std::shared_ptr<Material> material;
     glm::mat4 world_from_object;
     glm::mat4 object_from_world;
 
@@ -16,7 +17,7 @@ struct ShapeInstance {
 
     void updateBounds() {
         bounds = {};
-        auto bounds_object = shape.getBounds();
+        auto bounds_object = shape->getBounds();
         for (size_t idx = 0; idx < 8; idx ++) {
             auto corner_object = bounds_object.getCorner(idx);
             glm::vec3 corner_world = world_from_object * glm::vec4(corner_object, 1.f);
@@ -24,56 +25,60 @@ struct ShapeInstance {
         }
         center = (bounds.b_max + bounds.b_min) * 0.5f;
     }
+
+    ShapeInstance& operator=(const ShapeInstance &other) {
+        shape = other.shape;
+        material = other.material;
+        world_from_object = other.world_from_object;
+        object_from_world = other.object_from_world;
+        bounds = other.bounds;
+        center = other.center;
+        return *this;
+    }
 };
 
 
 struct SceneBVHTreeNode {
-    Bounds bounds{};
-    std::vector<ShapeInstance> instances;
-    SceneBVHTreeNode *left, *right;
-
+    Bounds bounds {};
+    size_t start, end;
+    SceneBVHTreeNode *children[2];
     size_t depth;
     size_t split_axis;
-
-    void updateBounds() {
-        bounds = {};
-        for (const auto &instance : instances) {
-            bounds.expand(instance.bounds);
-        }
-    }
 };
 
 
 struct alignas(32) SceneBVHNode {
-    Bounds bounds{};
+    Bounds bounds {};
     union {
         int child1_index;
         int instance_index;
     };
-
     uint16_t instance_count;
     uint8_t split_axis;
 };
 
+
 struct SceneBVHState {
-    size_t total_node_count {};
+    std::atomic<size_t> total_node_count {};
     size_t leaf_node_count {};
     size_t max_leaf_node_instance_count {};
     size_t max_leaf_node_depth {};
+    SpinLock spin_lock {};
 
     void addLeafNode(SceneBVHTreeNode *node) {
+        Guard guard(spin_lock);
         leaf_node_count ++;
-        max_leaf_node_instance_count = glm::max(max_leaf_node_instance_count, node->instances.size());
+        max_leaf_node_instance_count = glm::max(max_leaf_node_instance_count, node->end - node->start);
         max_leaf_node_depth = glm::max(max_leaf_node_depth, node->depth);
     }
 };
-
 
 class SceneBVHTreeNodeAllocator {
 public:
     SceneBVHTreeNodeAllocator() : ptr(4096) {}
 
     SceneBVHTreeNode *allocate() {
+        Guard guard(spin_lock);
         if (ptr == 4096) {
             nodes_list.emplace_back(new SceneBVHTreeNode[4096]);
             ptr = 0;
@@ -87,8 +92,8 @@ public:
         }
         nodes_list.clear();
     }
-
 private:
+    SpinLock spin_lock {};
     size_t ptr;
     std::vector<SceneBVHTreeNode *> nodes_list;
 };
@@ -98,16 +103,14 @@ class SceneBVH : public Shape {
 public:
     void build(std::vector<ShapeInstance> &&instances);
     std::optional<HitInfo> intersect(const Ray &ray, float t_min, float t_max) const override;
-    Bounds getBounds() const override {
-        return nodes[0].bounds;
-    }
+    Bounds getBounds() const override { return nodes[0].bounds; }
 
 private:
     void recursiveSplit(SceneBVHTreeNode *node, SceneBVHState &state);
     size_t recursiveFlatten(SceneBVHTreeNode *node);
 
 private:
-    SceneBVHTreeNodeAllocator allocator{};
+    SceneBVHTreeNodeAllocator allocator {};
     SceneBVHTreeNode *root;
     std::vector<SceneBVHNode> nodes;
     std::vector<ShapeInstance> ordered_instances;

@@ -18,6 +18,10 @@ std::optional<LightSample> InfiniteLight::sampleLight(const glm::vec3 &surface_p
     };
 }
 
+glm::vec3 InfiniteLight::getRadiance(const glm::vec3 &surface_point, const glm::vec3 &light_point, const glm::vec3 &normal) const {
+    return Le;
+}
+
 float InfiniteLight::getPDF(const glm::vec3 &surface_point, const glm::vec3 &light_point, const glm::vec3 &normal, bool allow_mis_compensation) const {
     if (allow_mis_compensation) {
         return 0;

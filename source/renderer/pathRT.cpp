@@ -36,7 +36,7 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
 
                 last_is_specular = hit_info->material->isDeltaDistribution();
                 if (!last_is_specular) {
-                    auto light_source_sample = scene.getLightSampler().sample(rng.uniform(), false);
+                    auto light_source_sample = scene.getLightSampler(false).sample(rng.uniform());
                     if (light_source_sample.has_value()) {
                       auto light_sample =
                           light_source_sample->light->sampleLight(
