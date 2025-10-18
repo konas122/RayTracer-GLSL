@@ -14,4 +14,4 @@ build/
 *.lib
 *.ppm
 
-assets/
+# assets/
