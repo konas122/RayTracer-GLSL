@@ -14,5 +14,5 @@ build/
 *.lib
 *.ppm
 
-# assets/
+assets/
 .DS_Store
