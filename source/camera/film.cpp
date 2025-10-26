@@ -1,41 +1,28 @@
 #include "util/rgb.h"
 #include "util/profile.h"
 #include "camera/film.h"
+#include "image/image.h"
 #include "thread/thread_pool.h"
 
 #include <vector>
-#include <fstream>
 
 Film::Film(size_t width, size_t height) : width(width), height(height) {
     pixels.resize(width * height);
 }
 
 void Film::save(const std::filesystem::path &filename) const {
-    // PROFILE("Film::save")
-
-    std::ofstream file(filename, std::ios::binary);
-    file << "P6\n" << width << ' ' << height << "\n255\n";
-
-    std::vector<uint8_t> buffer(width * height * 3);
-
-    ThreadPool::getThreadPool()->parallelFor(
-        width, height,
-        [&](size_t x, size_t y) {
-            auto pixel = getPixel(x, y);
-            if (pixel.sample_count == 0) {
-                return;
-            }
-            RGB rgb(pixel.color / static_cast<float>(pixel.sample_count));
-            auto idx = (y * width + x) * 3;
-            buffer[idx + 0] = rgb.r;
-            buffer[idx + 1] = rgb.g;
-            buffer[idx + 2] = rgb.b;
-        },
-        false
-    );
+    std::vector<glm::vec3> buffer(width * height);
+    ThreadPool::getThreadPool()->parallelFor(width, height, [&](size_t x, size_t y) {
+        auto pixel = getPixel(x, y);
+        if (pixel.sample_count == 0) {
+            return;
+        }
+        buffer[y * width + x] = pixel.color / static_cast<float>(pixel.sample_count);
+    }, false);
     ThreadPool::getThreadPool()->wait();
 
-    file.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
+    Image image(std::move(buffer), width, height);
+    image.save(filename);
 }
 
 

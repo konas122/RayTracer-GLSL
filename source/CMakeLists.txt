@@ -51,4 +51,4 @@ target_compile_definitions(
             GLM_FORCE_LEFT_HANDED
 )
 target_compile_definitions(CPURayTracer PUBLIC WITH_DEBUG_INFO)
-target_link_libraries(CPURayTracer glm rapidobj sfml-graphics)
+target_link_libraries(CPURayTracer glm rapidobj sfml-graphics OpenEXR::OpenEXR)

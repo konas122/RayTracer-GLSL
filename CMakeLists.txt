@@ -9,5 +9,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(third-party/glm)
 add_subdirectory(third-party/SFML)
 add_subdirectory(third-party/rapidobj)
+add_subdirectory(third-party/openexr)
 
 add_subdirectory(source)

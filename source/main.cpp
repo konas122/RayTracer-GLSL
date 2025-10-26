@@ -10,6 +10,7 @@
 #include "material/conductor.h"
 #include "material/ground.h"
 #include "light/infinite_light.hpp"
+#include "light/image_light.hpp"
 #include "renderer/pathRT.h"
 #include "renderer/misPathRT.h"
 #include "renderer/previewer.h"
@@ -75,14 +76,17 @@ int main() {
         std::make_shared<GroundMaterial>(glm::vec3(1, 1, 1))
     );
 
-    scene.addInfiniteLight(new InfiniteLight { { 0.5, 0.5, 0.5 } });
+    // Image env_image { "assets/HdrOutdoorSnowMountainsEveningClear001_HDR_4K.exr" };
+    // Image env_image { "assets/qwantani_night_puresky_4k.exr" };
+    Image env_image { "assets/kloppenheim_07_puresky_4k.exr" };
+    scene.addInfiniteLight(new ImageInfiniteLight { &env_image });
 
     scene.build();
 
     PathTracingRenderer path_tracing_renderer { camera, scene };
     Previewer previewer(path_tracing_renderer);
     if (previewer.preview()) {
-        path_tracing_renderer.render(32, "PT_MIS_TEST.ppm");
+        path_tracing_renderer.render(32, "PT_MIS_TEST.exr");
     }
 
     return 0;
