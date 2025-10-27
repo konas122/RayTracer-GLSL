@@ -25,7 +25,7 @@ bool Previewer::preview() {
     texture = std::make_shared<sf::Texture>(sf::Vector2u(film_resolution.x, film_resolution.y));
     texture->setSmooth(true);
     sprite = std::make_shared<sf::Sprite>(*texture);
-    setResolution(0.4);
+    setResolution(0.1);
     auto &camera = base_renderer.camera;
     auto &film = camera.getFilm();
 
@@ -126,7 +126,7 @@ bool Previewer::preview() {
         window->display();
 
         dt = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() * 0.001f;
-        // adjustResolution(dt);
+        adjustResolution(dt);
     }
 
     film.setResolution(film_resolution.x, film_resolution.y);

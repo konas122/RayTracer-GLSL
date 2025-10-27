@@ -11,4 +11,12 @@ add_subdirectory(third-party/SFML)
 add_subdirectory(third-party/rapidobj)
 add_subdirectory(third-party/openexr)
 
+if(MSVC)
+    target_compile_options(OpenEXRCore PRIVATE /arch:AVX2)
+    target_compile_options(OpenEXR PRIVATE /arch:AVX2)
+else()
+    target_compile_options(OpenEXRCore PRIVATE -msse4.1)
+    target_compile_options(OpenEXR PRIVATE -msse4.1)
+endif()
+
 add_subdirectory(source)
